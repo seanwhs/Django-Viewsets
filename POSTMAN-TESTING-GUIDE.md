@@ -1,6 +1,13 @@
 # Postman Testing Guide – DRF ViewSets Project
 
-This guide shows how to test the **Contacts** and **Products** APIs using **Postman**, including **JWT authentication** for protected endpoints.
+This guide explains how to test the **Contacts** and **Products** APIs using **Postman**, including **JWT authentication** and environment variables.
+
+> **All JWT-protected requests must include headers:**
+
+```http
+Authorization: Bearer {{ACCESS_TOKEN}}
+Content-Type: application/json
+```
 
 ---
 
@@ -8,47 +15,44 @@ This guide shows how to test the **Contacts** and **Products** APIs using **Post
 
 1. Download and install [Postman](https://www.postman.com/downloads/).
 2. Open Postman and create a **new collection** called `DRF ViewSets Project`.
-3. Set a **base URL variable** in your collection:
+3. Create a **Postman Environment** with variables:
 
-```
-Key: base_url
-Value: http://127.0.0.1:8000/api
-```
+| Key             | Value                       |
+| --------------- | --------------------------- |
+| `BASE_URL`      | `http://127.0.0.1:8000/api` |
+| `ACCESS_TOKEN`  | *(set after login)*         |
+| `REFRESH_TOKEN` | *(set after login)*         |
 
-This allows you to use `{{base_url}}/products/` and `{{base_url}}/contacts/` in requests.
+> Use `{{BASE_URL}}` in URLs and `{{ACCESS_TOKEN}}` in headers.
 
 ---
 
 ## 2. Test Public Products Endpoint
 
-**Endpoint:** List all products (no authentication required)
+**List products (no JWT required)**
 
-1. Create a **GET request** in Postman.
-2. URL:
+* **Method:** GET
+* **URL:** `{{BASE_URL}}/products/`
+* **Headers:** None
+* **Body:** None
 
-```
-{{base_url}}/products/
-```
-
-3. No headers or body required.
-4. Click **Send** → you should see a JSON array of products (empty if none created yet).
-
-✅ This endpoint is **public**—no JWT required.
+✅ Response: JSON array of products.
 
 ---
 
 ## 3. Obtain JWT Tokens
 
-**Endpoint:** `/api/token/` (POST)
+**Endpoint:** `/token/` (POST)
 
-1. Create a **POST request** in Postman.
-2. URL:
+* **Method:** POST
+* **URL:** `{{BASE_URL}}/token/`
+* **Headers:**
 
+```http
+Content-Type: application/json
 ```
-{{base_url}}/token/
-```
 
-3. Set **Body → raw → JSON**:
+* **Body (raw JSON):**
 
 ```json
 {
@@ -57,48 +61,43 @@ This allows you to use `{{base_url}}/products/` and `{{base_url}}/contacts/` in 
 }
 ```
 
-4. Click **Send** → JSON response:
+**Response:**
 
 ```json
 {
-  "access": "<your-access-token>",
-  "refresh": "<your-refresh-token>"
+  "access": "<access-token>",
+  "refresh": "<refresh-token>"
 }
 ```
 
-5. Copy the `access` token to use for protected endpoints.
+* Copy `access` → set as `{{ACCESS_TOKEN}}`
+* Copy `refresh` → set as `{{REFRESH_TOKEN}}`
 
 ---
 
-## 4. Use JWT Token in Postman
+## 4. Use JWT in Postman
 
-1. Select your **collection** or **individual request**.
+For all **JWT-protected requests**, add headers:
 
-2. Go to the **Authorization** tab:
+```http
+Authorization: Bearer {{ACCESS_TOKEN}}
+Content-Type: application/json
+```
 
-   * Type: **Bearer Token**
-   * Token: Paste your `access` token
-
-3. All requests marked as **JWT required** must include this token.
-
-💡 Tip: You can also set an **environment variable** for `access_token` and reference it with `{{access_token}}`.
+💡 Tip: Save headers in your collection to avoid repetition.
 
 ---
 
-## 5. Test Protected Products Endpoints
+## 5. Products API – Protected Endpoints
 
-All endpoints except `list` require JWT.
+All endpoints except `GET /products/` require JWT.
 
-### Create a Product
+### 5.1 Create Product
 
-* Method: **POST**
-* URL:
-
-```
-{{base_url}}/products/
-```
-
-* Body → raw → JSON:
+* **Method:** POST
+* **URL:** `{{BASE_URL}}/products/`
+* **Headers:** Authorization + Content-Type
+* **Body (JSON):**
 
 ```json
 {
@@ -108,35 +107,26 @@ All endpoints except `list` require JWT.
 }
 ```
 
-* Header: Authorization → Bearer `<access-token>`
-* Click **Send** → Response: **201 Created**
+✅ Response: **201 Created**
 
 ---
 
-### Retrieve a Product by Slug
+### 5.2 Retrieve Product
 
-* Method: **GET**
-* URL:
+* **Method:** GET
+* **URL:** `{{BASE_URL}}/products/test-product/`
+* **Headers:** Authorization + Content-Type
 
-```
-{{base_url}}/products/test-product/
-```
-
-* Header: Authorization → Bearer `<access-token>`
-* Click **Send** → JSON of product is returned.
+✅ Response: Product JSON
 
 ---
 
-### Update a Product (Full)
+### 5.3 Update Product (Full)
 
-* Method: **PUT**
-* URL:
-
-```
-{{base_url}}/products/test-product/
-```
-
-* Body → raw → JSON:
+* **Method:** PUT
+* **URL:** `{{BASE_URL}}/products/test-product/`
+* **Headers:** Authorization + Content-Type
+* **Body (JSON):**
 
 ```json
 {
@@ -146,21 +136,16 @@ All endpoints except `list` require JWT.
 }
 ```
 
-* Header: Authorization → Bearer `<access-token>`
-* Click **Send** → JSON of updated product.
+✅ Response: Updated product JSON
 
 ---
 
-### Partial Update a Product
+### 5.4 Partial Update Product
 
-* Method: **PATCH**
-* URL:
-
-```
-{{base_url}}/products/test-product/
-```
-
-* Body → raw → JSON (only fields to update):
+* **Method:** PATCH
+* **URL:** `{{BASE_URL}}/products/test-product/`
+* **Headers:** Authorization + Content-Type
+* **Body (JSON):**
 
 ```json
 {
@@ -168,53 +153,40 @@ All endpoints except `list` require JWT.
 }
 ```
 
-* Header: Authorization → Bearer `<access-token>`
-* Click **Send** → JSON of updated product.
+✅ Response: Partially updated product
 
 ---
 
-### Delete a Product
+### 5.5 Delete Product
 
-* Method: **DELETE**
-* URL:
+* **Method:** DELETE
+* **URL:** `{{BASE_URL}}/products/test-product/`
+* **Headers:** Authorization + Content-Type
 
-```
-{{base_url}}/products/test-product/
-```
-
-* Header: Authorization → Bearer `<access-token>`
-* Click **Send** → Response: **204 No Content**
+✅ Response: **204 No Content**
 
 ---
 
-## 6. Test Contacts Endpoints
+## 6. Contacts API – All JWT-Protected
 
-All **contacts endpoints require JWT**.
+All endpoints require JWT.
 
-### List Contacts
+### 6.1 List Contacts
 
-* Method: **GET**
-* URL:
+* **Method:** GET
+* **URL:** `{{BASE_URL}}/contacts/`
+* **Headers:** Authorization + Content-Type
 
-```
-{{base_url}}/contacts/
-```
-
-* Header: Authorization → Bearer `<access-token>`
-* Send → JSON array of contacts.
+✅ Response: JSON array of contacts
 
 ---
 
-### Create Contact
+### 6.2 Create Contact
 
-* Method: **POST**
-* URL:
-
-```
-{{base_url}}/contacts/
-```
-
-* Body → raw → JSON:
+* **Method:** POST
+* **URL:** `{{BASE_URL}}/contacts/`
+* **Headers:** Authorization + Content-Type
+* **Body (JSON):**
 
 ```json
 {
@@ -223,60 +195,63 @@ All **contacts endpoints require JWT**.
 }
 ```
 
-* Header: Authorization → Bearer `<access-token>`
-* Send → JSON of created contact.
+✅ Response: Created contact JSON
 
 ---
 
-### Retrieve / Update / Delete Contact
+### 6.3 Retrieve / Update / Delete Contact
 
-* Use `/api/contacts/<id>/`
-* Include **Bearer token** in Authorization header
-* Methods: **GET**, **PUT**, **PATCH**, **DELETE**
+* **URL:** `{{BASE_URL}}/contacts/<id>/`
+* **Methods:** GET, PUT, PATCH, DELETE
+* **Headers:** Authorization + Content-Type
 
 ---
 
 ## 7. Refresh JWT Token
 
-**Endpoint:** `/api/token/refresh/` (POST)
+**Endpoint:** `/token/refresh/` (POST)
 
-1. Method: **POST**
-2. URL:
+* **Method:** POST
+* **URL:** `{{BASE_URL}}/token/refresh/`
+* **Headers:**
 
+```http
+Content-Type: application/json
 ```
-{{base_url}}/token/refresh/
-```
 
-3. Body → raw → JSON:
+* **Body (JSON):**
 
 ```json
 {
-  "refresh": "<your-refresh-token>"
+  "refresh": "{{REFRESH_TOKEN}}"
 }
 ```
 
-4. Click **Send** → new `access` token returned.
-
-💡 Use this token for subsequent requests without logging in again.
+✅ Response: New access token → update `{{ACCESS_TOKEN}}`
 
 ---
 
 ## 8. Quick Tips
 
-* Use **environment variables** for `base_url`, `access_token`, and `refresh_token`.
-* Save all requests in the collection for easy retesting.
-* Remember:
+* Use **environment variables** for `BASE_URL`, `ACCESS_TOKEN`, `REFRESH_TOKEN`.
+* Save requests in the collection for fast testing.
+* Access rules summary:
 
-  * `/products/` → list is **public**
-  * `/products/<slug>/` → **JWT required**
-  * `/contacts/` → **all JWT protected**
+| Endpoint            | Methods                       | Auth Required |
+| ------------------- | ----------------------------- | ------------- |
+| `/products/`        | GET (list)                    | ❌ Public      |
+| `/products/<slug>/` | GET, POST, PUT, PATCH, DELETE | ✅ JWT Only    |
+| `/contacts/`        | GET, POST                     | ✅ JWT Only    |
+| `/contacts/<id>/`   | GET, PUT, PATCH, DELETE       | ✅ JWT Only    |
+
+* Refresh your access token before expiry to continue testing protected endpoints.
 
 ---
 
-✅ **This guide gives a full Postman workflow**:
+✅ **Workflow Summary**
 
-1. Obtain JWT tokens
+1. Obtain JWT tokens (`/token/`)
 2. Test public endpoints (`GET /products/`)
-3. Test JWT-protected endpoints with Bearer token
-4. Refresh tokens when needed
+3. Test protected endpoints with Bearer token
+4. Refresh access token when expired (`/token/refresh/`)
 
