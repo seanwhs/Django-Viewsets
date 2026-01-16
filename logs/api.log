@@ -1,0 +1,14 @@
+[INFO] 2026-01-17 07:33:43,078 api.requests GET /api/products/ -> 200 (anonymous) 78ms
+[INFO] 2026-01-17 07:33:46,888 api.requests GET /api/docs/ -> 200 (anonymous) 0ms
+[INFO] 2026-01-17 07:33:47,117 api.requests GET /api/schema/ -> 200 (anonymous) 46ms
+[INFO] 2026-01-17 07:33:49,139 api.requests GET /api/docs/ -> 200 (anonymous) 0ms
+[INFO] 2026-01-17 07:33:49,342 api.requests GET /api/schema/ -> 200 (anonymous) 15ms
+[INFO] 2026-01-17 07:33:51,418 api.requests GET /api/redoc/ -> 200 (anonymous) 0ms
+[INFO] 2026-01-17 07:33:51,545 api.requests GET /api/schema/ -> 200 (anonymous) 16ms
+[INFO] 2026-01-17 07:45:37,902 api.requests GET /api/docs/ -> 200 (anonymous) 16ms
+[INFO] 2026-01-17 07:45:37,993 api.requests GET /api/schema/ -> 200 (anonymous) 16ms
+[INFO] 2026-01-17 07:45:41,368 api.requests GET /api/docs/ -> 200 (anonymous) 0ms
+[INFO] 2026-01-17 07:45:41,481 api.requests GET /api/schema/ -> 200 (anonymous) 16ms
+[INFO] 2026-01-17 07:45:46,135 api.requests GET /api/products/ -> 200 (anonymous) 0ms
+[INFO] 2026-01-17 07:45:52,393 api.requests GET /api/contacts -> 404 (anonymous) 0ms
+[INFO] 2026-01-17 07:45:52,398 api.requests GET /api/contacts/ -> 401 (anonymous) 0ms

@@ -1,257 +1,248 @@
-# Postman Testing Guide – DRF ViewSets Project
+# 🧪 **Postman Testing Guide – DRF ViewSets Memory Project**
 
-This guide explains how to test the **Contacts** and **Products** APIs using **Postman**, including **JWT authentication** and environment variables.
+**Purpose:** Complete testing workflow for your **ViewSet vs ModelViewSet** comparison project. Test **JWT auth**, **public endpoints**, **slug lookups**, **all CRUD operations**. Ready-to-copy Postman setup.
 
-> **All JWT-protected requests must include headers:**
+***
 
-```http
+## 🎯 **1. Postman Environment Setup**
+
+Create **Environment Variables** (Ctrl+Alt+E):
+
+| **Variable** | **Initial Value** | **Purpose** |
+|--------------|-------------------|-------------|
+| `BASE_URL` | `http://127.0.0.1:8000/api` | API root |
+| `ACCESS_TOKEN` | `""` | JWT token (set after login) |
+| `REFRESH_TOKEN` | `""` | Refresh token (set after login) |
+
+***
+
+## 🔐 **2. JWT Authentication Flow**
+
+### **Step 1: Login → Get Tokens**
+```
+POST {{BASE_URL}}/token/
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "your_password"
+}
+```
+
+**✅ Response (201):**
+```json
+{
+  "access": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+  "refresh": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
+}
+```
+
+**→ Copy `access` → Set `{{ACCESS_TOKEN}}`**
+**→ Copy `refresh` → Set `{{REFRESH_TOKEN}}`**
+
+***
+
+### **Step 2: Refresh Token (when expired)**
+```
+POST {{BASE_URL}}/token/refresh/
+Content-Type: application/json
+
+{
+  "refresh": "{{REFRESH_TOKEN}}"
+}
+```
+
+**✅ Response:**
+```json
+{
+  "access": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
+}
+```
+
+***
+
+## 🌐 **3. Products API Testing (ViewSet)**
+
+### **✅ PUBLIC: List Products (No JWT)**
+```
+GET {{BASE_URL}}/products/
+```
+**Headers:** None  
+**✅ 200 OK** → Product array
+
+***
+
+### **🔒 PROTECTED: All Other Actions**
+
+**Headers (ALL protected requests):**
+```
 Authorization: Bearer {{ACCESS_TOKEN}}
 Content-Type: application/json
 ```
 
----
-
-## 1. Setup Postman
-
-1. Download and install [Postman](https://www.postman.com/downloads/).
-2. Open Postman and create a **new collection** called `DRF ViewSets Project`.
-3. Create a **Postman Environment** with variables:
-
-| Key             | Value                       |
-| --------------- | --------------------------- |
-| `BASE_URL`      | `http://127.0.0.1:8000/api` |
-| `ACCESS_TOKEN`  | *(set after login)*         |
-| `REFRESH_TOKEN` | *(set after login)*         |
-
-> Use `{{BASE_URL}}` in URLs and `{{ACCESS_TOKEN}}` in headers.
-
----
-
-## 2. Test Public Products Endpoint
-
-**List products (no JWT required)**
-
-* **Method:** GET
-* **URL:** `{{BASE_URL}}/products/`
-* **Headers:** None
-* **Body:** None
-
-✅ Response: JSON array of products.
-
----
-
-## 3. Obtain JWT Tokens
-
-**Endpoint:** `/token/` (POST)
-
-* **Method:** POST
-* **URL:** `{{BASE_URL}}/token/`
-* **Headers:**
-
-```http
-Content-Type: application/json
+#### **Create Product**
 ```
-
-* **Body (raw JSON):**
-
-```json
+POST {{BASE_URL}}/products/
 {
-  "username": "your_superuser_username",
-  "password": "your_superuser_password"
+  "slug": "iphone-16",
+  "name": "iPhone 16 Pro",
+  "price": 999
+}
+```
+**✅ 201 Created**
+
+#### **Retrieve Product (Slug Lookup)**
+```
+GET {{BASE_URL}}/products/iphone-16/
+```
+**✅ 200 OK**
+
+#### **Full Update**
+```
+PUT {{BASE_URL}}/products/iphone-16/
+{
+  "slug": "iphone-16",
+  "name": "iPhone 16 Pro Max",
+  "price": 1199
 }
 ```
 
-**Response:**
-
-```json
+#### **Partial Update**
+```
+PATCH {{BASE_URL}}/products/iphone-16/
 {
-  "access": "<access-token>",
-  "refresh": "<refresh-token>"
+  "price": 1299
 }
 ```
 
-* Copy `access` → set as `{{ACCESS_TOKEN}}`
-* Copy `refresh` → set as `{{REFRESH_TOKEN}}`
-
----
-
-## 4. Use JWT in Postman
-
-For all **JWT-protected requests**, add headers:
-
-```http
-Authorization: Bearer {{ACCESS_TOKEN}}
-Content-Type: application/json
+#### **Delete**
 ```
-
-💡 Tip: Save headers in your collection to avoid repetition.
-
----
-
-## 5. Products API – Protected Endpoints
-
-All endpoints except `GET /products/` require JWT.
-
-### 5.1 Create Product
-
-* **Method:** POST
-* **URL:** `{{BASE_URL}}/products/`
-* **Headers:** Authorization + Content-Type
-* **Body (JSON):**
-
-```json
-{
-  "slug": "test-product",
-  "name": "Test Product",
-  "price": 100
-}
+DELETE {{BASE_URL}}/products/iphone-16/
 ```
+**✅ 204 No Content**
 
-✅ Response: **201 Created**
+***
 
----
+## 📱 **4. Contacts API Testing (ModelViewSet)**
 
-### 5.2 Retrieve Product
+**ALL endpoints require JWT** → Same headers as above.
 
-* **Method:** GET
-* **URL:** `{{BASE_URL}}/products/test-product/`
-* **Headers:** Authorization + Content-Type
-
-✅ Response: Product JSON
-
----
-
-### 5.3 Update Product (Full)
-
-* **Method:** PUT
-* **URL:** `{{BASE_URL}}/products/test-product/`
-* **Headers:** Authorization + Content-Type
-* **Body (JSON):**
-
-```json
-{
-  "slug": "test-product",
-  "name": "Updated Product",
-  "price": 120
-}
+### **List + Create**
 ```
-
-✅ Response: Updated product JSON
-
----
-
-### 5.4 Partial Update Product
-
-* **Method:** PATCH
-* **URL:** `{{BASE_URL}}/products/test-product/`
-* **Headers:** Authorization + Content-Type
-* **Body (JSON):**
-
-```json
-{
-  "price": 150
-}
+GET {{BASE_URL}}/contacts/
 ```
-
-✅ Response: Partially updated product
-
----
-
-### 5.5 Delete Product
-
-* **Method:** DELETE
-* **URL:** `{{BASE_URL}}/products/test-product/`
-* **Headers:** Authorization + Content-Type
-
-✅ Response: **204 No Content**
-
----
-
-## 6. Contacts API – All JWT-Protected
-
-All endpoints require JWT.
-
-### 6.1 List Contacts
-
-* **Method:** GET
-* **URL:** `{{BASE_URL}}/contacts/`
-* **Headers:** Authorization + Content-Type
-
-✅ Response: JSON array of contacts
-
----
-
-### 6.2 Create Contact
-
-* **Method:** POST
-* **URL:** `{{BASE_URL}}/contacts/`
-* **Headers:** Authorization + Content-Type
-* **Body (JSON):**
-
-```json
+```
+POST {{BASE_URL}}/contacts/
 {
   "fname": "John",
   "lname": "Doe"
 }
 ```
 
-✅ Response: Created contact JSON
-
----
-
-### 6.3 Retrieve / Update / Delete Contact
-
-* **URL:** `{{BASE_URL}}/contacts/<id>/`
-* **Methods:** GET, PUT, PATCH, DELETE
-* **Headers:** Authorization + Content-Type
-
----
-
-## 7. Refresh JWT Token
-
-**Endpoint:** `/token/refresh/` (POST)
-
-* **Method:** POST
-* **URL:** `{{BASE_URL}}/token/refresh/`
-* **Headers:**
-
-```http
-Content-Type: application/json
+### **CRUD by ID**
+```
+GET {{BASE_URL}}/contacts/1/
+PUT {{BASE_URL}}/contacts/1/
+PATCH {{BASE_URL}}/contacts/1/
+DELETE {{BASE_URL}}/contacts/1/
 ```
 
-* **Body (JSON):**
+***
+
+## 📋 **5. Complete Endpoint Matrix**
+
+| **Endpoint** | **Method** | **Auth** | **ViewSet** | **ModelViewSet** |
+|--------------|------------|----------|-------------|------------------|
+| `/products/` | **GET** | ❌ Public | ✅ List | - |
+| `/products/` | **POST** | ✅ JWT | ✅ Create | - |
+| `/products/<slug>/` | **GET** | ✅ JWT | ✅ Retrieve | - |
+| `/products/<slug>/` | **PUT** | ✅ JWT | ✅ Update | - |
+| `/products/<slug>/` | **PATCH** | ✅ JWT | ✅ Partial | - |
+| `/products/<slug>/` | **DELETE** | ✅ JWT | ✅ Destroy | - |
+| `/contacts/` | **GET** | ✅ JWT | - | ✅ List |
+| `/contacts/` | **POST** | ✅ JWT | - | ✅ Create |
+| `/contacts/<id>/` | **GET/PUT/PATCH/DELETE** | ✅ JWT | - | ✅ All |
+
+***
+
+## 🧩 **6. Postman Collection JSON (Import Ready)**
 
 ```json
 {
-  "refresh": "{{REFRESH_TOKEN}}"
+  "info": { "name": "DRF ViewSets", "_postman_id": "..." },
+  "variable": [
+    { "key": "BASE_URL", "value": "http://127.0.0.1:8000/api" },
+    { "key": "ACCESS_TOKEN", "value": "" },
+    { "key": "REFRESH_TOKEN", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "🔐 JWT Login",
+      "request": { "method": "POST", "url": "{{BASE_URL}}/token/", ... }
+    },
+    {
+      "name": "🌐 Products List (Public)",
+      "request": { "method": "GET", "url": "{{BASE_URL}}/products/" }
+    },
+    {
+      "name": "📱 Products Create (JWT)",
+      "request": { 
+        "method": "POST", 
+        "url": "{{BASE_URL}}/products/",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{ACCESS_TOKEN}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ]
+      }
+    }
+  ]
 }
 ```
 
-✅ Response: New access token → update `{{ACCESS_TOKEN}}`
+***
 
----
+## ⚡ **7. Pro Tips (Save Time)**
 
-## 8. Quick Tips
+1. **Pre-request Script** (auto-set headers):
+```javascript
+pm.request.headers.add({
+    key: 'Authorization',
+    value: 'Bearer ' + pm.environment.get('ACCESS_TOKEN')
+});
+```
 
-* Use **environment variables** for `BASE_URL`, `ACCESS_TOKEN`, `REFRESH_TOKEN`.
-* Save requests in the collection for fast testing.
-* Access rules summary:
+2. **Tests Script** (auto-save tokens):
+```javascript
+if (pm.response.code === 200) {
+  const jsonData = pm.response.json();
+  pm.environment.set("ACCESS_TOKEN", jsonData.access);
+  pm.environment.set("REFRESH_TOKEN", jsonData.refresh);
+}
+```
 
-| Endpoint            | Methods                       | Auth Required |
-| ------------------- | ----------------------------- | ------------- |
-| `/products/`        | GET (list)                    | ❌ Public      |
-| `/products/<slug>/` | GET, POST, PUT, PATCH, DELETE | ✅ JWT Only    |
-| `/contacts/`        | GET, POST                     | ✅ JWT Only    |
-| `/contacts/<id>/`   | GET, PUT, PATCH, DELETE       | ✅ JWT Only    |
+3. **Collection Runner** → Test all endpoints in sequence.
 
-* Refresh your access token before expiry to continue testing protected endpoints.
+***
 
----
+## 🚀 **8. Quickstart Workflow**
 
-✅ **Workflow Summary**
+```
+1. python manage.py runserver
+2. Postman → Import environment
+3. POST /token/ → Set tokens
+4. GET /products/ → Test public
+5. POST /products/ → Test JWT
+6. POST /contacts/ → Test ModelViewSet
+7. Open http://127.0.0.1:8000/api/docs/ → Swagger backup
+```
 
-1. Obtain JWT tokens (`/token/`)
-2. Test public endpoints (`GET /products/`)
-3. Test protected endpoints with Bearer token
-4. Refresh access token when expired (`/token/refresh/`)
+***
 
+## 📁 **9. Logs Check (Bonus)**
+
+After testing, check `./logs/`:
+```
+api.log      → All requests logged
+errors.log   → Failed auth attempts
+django.log   → Framework events
+```

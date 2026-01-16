@@ -6,4 +6,4 @@ class Contact(models.Model):
     lname = models.CharField(max_length=100)
 
     def __str__(self):
-        return self. lname
+        return self.lname  
